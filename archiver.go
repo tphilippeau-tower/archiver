@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // Archiver represent a archive format
@@ -76,6 +77,16 @@ func writeNewSymbolicLink(fpath string, target string) error {
 	if err != nil {
 		return fmt.Errorf("%s: making directory for file: %v", fpath, err)
 	}
+
+	if _, err = os.Stat(fpath); err == nil {
+		backupFile := fmt.Sprintf("%s.%s", fpath, time.Now().Format("20060102150405"))
+		fmt.Printf("ArchiverFromGit: symlink %s already exists. Moving it to %s\n", fpath, backupFile)
+		if err = os.Rename(fpath, backupFile); err != nil {
+			return err
+		}
+	}
+
+	fmt.Printf("ArchiverFromGit: Creating symlink %s in directory %s\n", target, fpath)
 
 	err = os.Symlink(target, fpath)
 	if err != nil {
